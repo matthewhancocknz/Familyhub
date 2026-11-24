@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2a6f6b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Family Hub</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#f5f3ee; --card:#fff; --ink:#1f2522; --muted:#6c736f; --line:#e4e0d8;
+  --brand:#2a6f6b; --brand-ink:#fff; --soft:#e7f0ef; --warn:#c0392b; --amber:#d68910;
+  --holbg:#fdf0d9; --r:14px; --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#141817;--card:#1e2422;--ink:#e9ecea;--muted:#9aa39f;--line:#2e3633;--brand:#4fa39d;--soft:#22312f;--warn:#e5675a;--holbg:#3a3121;}
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+header{position:sticky;top:0;z-index:5;background:var(--brand);color:var(--brand-ink);padding:calc(10px + var(--safe-t)) 16px 10px;display:flex;align-items:center;gap:10px}
+header h1{font-size:19px;margin:0;flex:1;font-weight:650;letter-spacing:.2px}
+.iconbtn{background:none;border:0;color:inherit;font-size:20px;padding:6px 8px;border-radius:10px;cursor:pointer}
+#syncdot{width:10px;height:10px;border-radius:50%;background:#9aa;display:inline-block}
+#syncdot.ok{background:#7ee08a}#syncdot.busy{background:#ffd166}#syncdot.err{background:#ff6b6b}
+main{max-width:680px;margin:0 auto;padding:12px 12px calc(90px + var(--safe-b))}
+section.view{display:none}section.view.on{display:block}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:var(--safe-b)}
+nav.tabs button{flex:1;background:none;border:0;padding:8px 0 9px;font-size:11.5px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+nav.tabs button b{font-size:21px;font-weight:400;line-height:1.1}
+nav.tabs button.on{color:var(--brand);font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-bottom:12px}
+.card h2{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:0 0 8px;font-weight:650;display:flex;align-items:center;gap:8px}
+.card h2 .sp{flex:1}
+.big{font-size:22px;font-weight:650;margin:4px 2px 12px}
+.muted{color:var(--muted)}.small{font-size:13px}.warn{color:var(--warn)}
+.row{display:flex;align-items:center;gap:8px}
+.grow{flex:1;min-width:0}
+.btn{background:var(--brand);color:var(--brand-ink);border:0;border-radius:11px;padding:10px 14px;font-weight:600;cursor:pointer}
+.btn.ghost{background:var(--soft);color:var(--brand)}
+.btn.danger{background:none;color:var(--warn);border:1px solid var(--warn)}
+.btn.sm{padding:6px 10px;font-size:14px;border-radius:9px}
+.btn.full{width:100%}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-size:14px;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.chip.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.chip.m.on{background:var(--c);border-color:var(--c);color:#fff}
+.av{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;color:#fff;font-size:11px;font-weight:700;flex:none}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--c,#999)}
+/* events */
+.ev{display:flex;gap:10px;align-items:flex-start;padding:9px 0 9px 10px;border-left:4px solid var(--c);margin:6px 0;cursor:pointer;border-radius:4px}
+.ev+.ev{}
+.ev-time{width:74px;flex:none;font-size:13px;color:var(--muted);padding-top:2px}
+.ev-main{flex:1;min-width:0}
+.ev-title{font-weight:600;overflow-wrap:anywhere}
+.ev-who{display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end;max-width:80px}
+.dayhead{font-weight:650;margin:14px 0 2px;font-size:15px}
+.dayhead.today{color:var(--brand)}
+/* calendar */
+.calnav{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.calnav .t{flex:1;font-weight:650;font-size:18px;text-align:center}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.grid .h{text-align:center;font-size:11px;color:var(--muted);padding:2px 0}
+.cell{background:var(--card);border:1px solid var(--line);border-radius:9px;min-height:52px;padding:3px 2px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+.cell.out{opacity:.4}
+.cell.today .n{background:var(--brand);color:#fff;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center}
+.cell.sel{outline:2px solid var(--brand);outline-offset:-1px}
+.cell .n{font-size:13px;font-weight:600}
+.cell.shol{background:var(--holbg)}
+.cell.phol .n{color:var(--warn)}
+.cd{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.cd:last-child{border-bottom:0}
+.cd .num{min-width:64px;text-align:right;font-weight:700;font-size:18px;color:var(--brand)}
+.cd .num small{display:block;font-size:11px;font-weight:500;color:var(--muted)}
+.ev.virt{cursor:default;border-left-style:dashed}
+.legend{font-size:12px;color:var(--muted);margin-top:6px;display:flex;gap:12px;align-items:center}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--holbg);border:1px solid var(--line);vertical-align:-2px;margin-right:4px}
+label.ck{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:15px}
+label.ck input{width:auto}
+.cell .ds{display:flex;flex-wrap:wrap;gap:2px;justify-content:center;max-width:34px}
+.cell .ds i{width:7px;height:7px;border-radius:50%;display:block}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:var(--card);padding:6px 12px;font-size:14px;cursor:pointer}
+.seg button.on{background:var(--brand);color:#fff}
+/* lists */
+.item{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+.item:last-child{border-bottom:0}
+.box{width:22px;height:22px;border:2px solid var(--muted);border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff}
+.item.done .box{background:var(--brand);border-color:var(--brand)}
+.item.done .name{text-decoration:line-through;color:var(--muted)}
+.name{flex:1;min-width:0;overflow-wrap:anywhere}
+.x{background:none;border:0;color:var(--muted);font-size:16px;padding:4px 8px;cursor:pointer}
+.add{display:flex;gap:8px;margin-bottom:10px}
+.add input{flex:1;min-width:0}
+input[type=text],input[type=date],input[type=time],input[type=password],input:not([type]),select,textarea{width:100%;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 11px}
+textarea{min-height:70px;resize:vertical}
+label.f{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px;font-weight:600}
+.circle{width:24px;height:24px;border:2px solid var(--muted);border-radius:50%;flex:none;cursor:pointer;background:none;padding:0}
+.circle:hover{border-color:var(--brand)}
+.task{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.task:last-child{border-bottom:0}
+.task .grow{cursor:pointer}
+.meal{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.meal:last-child{border-bottom:0}
+.meal .d{width:52px;flex:none;font-size:13px;color:var(--muted);font-weight:600}
+.meal.today .d{color:var(--brand)}
+.empty{color:var(--muted);font-size:14px;padding:6px 0}
+.stat{display:flex;align-items:center;gap:10px;padding:8px 0;cursor:pointer;border-bottom:1px solid var(--line)}
+.stat:last-child{border-bottom:0}
+/* sheet */
+.sheet{position:fixed;inset:0;z-index:20;display:none}
+.sheet.on{display:block}
+.sheet-bg{position:absolute;inset:0;background:rgba(0,0,0,.4)}
+.sheet-card{position:absolute;left:0;right:0;bottom:0;max-width:680px;margin:0 auto;background:var(--bg);border-radius:18px 18px 0 0;max-height:92dvh;overflow:auto;padding:16px 16px calc(18px + var(--safe-b))}
+.sheet-card h3{margin:0 0 4px;font-size:19px}
+.swatch{width:30px;height:30px;border-radius:50%;border:0;flex:none;cursor:pointer}
+#toast{position:fixed;left:50%;bottom:calc(84px + var(--safe-b));transform:translateX(-50%);background:#222;color:#fff;padding:9px 14px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:30;max-width:90vw}
+#toast.on{opacity:1}
+#crash{display:none;position:fixed;top:0;left:0;right:0;z-index:40;background:#7a1f1f;color:#fff;padding:10px 12px;font-size:13px;white-space:pre-wrap}
+.fab{position:fixed;right:18px;bottom:calc(78px + var(--safe-b));z-index:6;width:56px;height:56px;border-radius:18px;border:0;background:var(--brand);color:#fff;font-size:28px;box-shadow:0 4px 14px rgba(0,0,0,.25);cursor:pointer}
+.hide{display:none!important}
+.foot{text-align:center;color:var(--muted);font-size:12px;margin-top:18px}
+</style>
+</head>
+<body>
+<div id="crash"></div>
+<header>
+  <h1 id="apptitle">Family Hub</h1>
+  <button class="iconbtn" onclick="syncNow(true)" title="Sync now"><span id="syncdot"></span></button>
+  <button class="iconbtn" onclick="openSettings()" title="Settings">⚙︎</button>
+</header>
+<main>
+  <section class="view" id="v-home"></section>
+  <section class="view" id="v-cal"></section>
+  <section class="view" id="v-lists"></section>
+  <section class="view" id="v-tasks"></section>
+  <section class="view" id="v-meals"></section>
+</main>
+<button class="fab" id="fab" onclick="fabAction()">+</button>
+<nav class="tabs" id="tabs">
+  <button data-tab="home" onclick="go('home')"><b>⌂</b>Home</button>
+  <button data-tab="cal" onclick="go('cal')"><b>▦</b>Calendar</button>
+  <button data-tab="lists" onclick="go('lists')"><b>☑</b>Lists</button>
+  <button data-tab="tasks" onclick="go('tasks')"><b>✓</b>Jobs</button>
+  <button data-tab="meals" onclick="go('meals')"><b>🍽</b>Meals</button>
+</nav>
+<div class="sheet" id="sheet"><div class="sheet-bg" onclick="closeSheet()"></div><div class="sheet-card" id="sheetbody"></div></div>
+<div id="toast"></div>
+<input type="file" id="importfile" accept=".json,application/json" class="hide" onchange="importBackup(this)">
+
+<script>
+'use strict';
+window.addEventListener('error', e => showCrash(e.message + (e.lineno ? ' (line ' + e.lineno + ')' : '')));
+window.addEventListener('unhandledrejection', e => showCrash('Promise: ' + ((e.reason && e.reason.message) || e.reason)));
+function showCrash(msg){ const c = document.getElementById('crash'); if(!c) return; c.style.display='block'; c.textContent = 'Something broke: ' + msg + '\nTap to hide. Build ' + BUILD; c.onclick = () => c.style.display='none'; }
+
+const BUILD = '2026-11-24 · v2';
+const K = {data:'famhub.data', sync:'famhub.sync', prefs:'famhub.prefs'};
+const COLS = ['members','events','lists','items','tasks','meals'];
+const PALETTE = ['#e4572e','#2e86ab','#7a5195','#2a9d8f','#f4a261','#d1495b','#5c7cfa','#6a994e','#8d6e63','#ef6f9b'];
+const CATS = {activity:['⚽','Activity'], school:['🎒','School'], appt:['🩺','Appointment'], birthday:['🎂','Birthday'], social:['🎉','Social'], work:['💼','Work'], holiday:['🏖️','Holiday'], other:['📌','Other']};
+const VCATS = {nzhol:['🇳🇿','Public holiday'], term:['🏫','School term'], shol:['🏖️','School holidays']};
+const REMIND = [['','No reminder'],['0','At start time'],['15','15 min before'],['30','30 min before'],['60','1 hour before'],['120','2 hours before'],['1440','1 day before']];
+const REPEAT_EV = [['none','Does not repeat'],['weekly','Weekly'],['fortnightly','Fortnightly'],['monthly','Monthly (same date)'],['yearly','Yearly']];
+const REPEAT_TASK = [['none','Once'],['daily','Daily'],['weekly','Weekly'],['fortnightly','Fortnightly'],['monthly','Monthly']];
+const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const DOWL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+/* ---------- utils ---------- */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+const pad = n => String(n).padStart(2,'0');
+function ymd(d){ return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+function parseYmd(s){ const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
+function addDays(s, n){ const d = parseYmd(s); d.setDate(d.getDate()+n); return ymd(d); }
+function addMonths(s, n){ const d = parseYmd(s); const day = d.getDate(); d.setDate(1); d.setMonth(d.getMonth()+n); const last = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate(); d.setDate(Math.min(day,last)); return ymd(d); }
+function today(){ return ymd(new Date()); }
+function dayDiff(a, b){ return Math.round((parseYmd(b) - parseYmd(a)) / 864e5); }
+function monday(s){ const d = parseYmd(s); return addDays(s, -((d.getDay()+6)%7)); }
+function fmtTime(t){ if(!t) return ''; const [h,m] = t.split(':').map(Number); return (h%12||12) + (m ? ':' + pad(m) : '') + (h<12 ? 'am' : 'pm'); }
+function fmtDay(s, long){ const d = parseYmd(s); return (long ? DOWL : DOW)[d.getDay()] + ' ' + d.getDate() + ' ' + (long ? MONL : MON)[d.getMonth()]; }
+function relDay(s){ const n = dayDiff(today(), s); if(n===0) return 'Today'; if(n===1) return 'Tomorrow'; if(n===-1) return 'Yesterday'; return fmtDay(s); }
+function readJSON(k, def){ try{ const s = localStorage.getItem(k); return s ? JSON.parse(s) : def; }catch(e){ return def; } }
+function writeJSON(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){ toast('Could not save on this device'); } }
+let toastT;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(()=> t.classList.remove('on'), 2400); }
+
+/* ---------- data ---------- */
+// Fixed ids so every new device starts with the same family and nothing duplicates on sync
+const SEED_MEMBERS = [
+  {id:'m-matt',  name:'Matt',  color:'#2e86ab', order:0},
+  {id:'m-emma',  name:'Emma',  color:'#e4572e', order:1},
+  {id:'m-poppy', name:'Poppy', color:'#ef6f9b', order:2},
+  {id:'m-zoe',   name:'Zoe',   color:'#7a5195', order:3},
+  {id:'m-arno',  name:'Arno',  color:'#2a9d8f', order:4}
+];
+function blank(){ return {v:1, settings:{name:'Family Hub', ts:0}, members: SEED_MEMBERS.map(m => ({...m, ts:1})), events:[], lists:[{id:'groceries', name:'Groceries', order:0, ts:1}], items:[], tasks:[], meals:[], tomb:{}}; }
+function normalise(d){
+  const b = blank();
+  if(!d || typeof d !== 'object') return b;
+  const o = {v:1, settings: (d.settings && typeof d.settings==='object') ? {...b.settings, ...d.settings} : b.settings, tomb:{}};
+  if(d.tomb && typeof d.tomb === 'object') for(const k in d.tomb) if(typeof d.tomb[k]==='number') o.tomb[k] = d.tomb[k];
+  for(const c of COLS) o[c] = Array.isArray(d[c]) ? d[c].filter(r => r && typeof r.id === 'string') : b[c];
+  return o;
+}
+let D = normalise(readJSON(K.data, null));
+let SYNC = Object.assign({owner:'', repo:'familyhub-data', branch:'main', path:'familyhub-data.json', token:'', last:null, err:null}, readJSON(K.sync, {}));
+let P = Object.assign({tab:'home', me:'', calFilter:'all', calView:'month', list:'groceries', taskFilter:'all', recent:[], showHol:true, showTerms:true, cdSchool:true, cdXmas:true, offerCal:true}, readJSON(K.prefs, {}));
+let calMonth = today().slice(0,8) + '01';
+let selDay = today();
+let mealWeek = monday(today());
+
+function persist(){ writeJSON(K.data, D); }
+function savePrefs(){ writeJSON(K.prefs, P); }
+function commit(){ persist(); renderAll(); scheduleSync(); }
+function upsert(col, rec){
+  rec.ts = Date.now();
+  if(!rec.created) rec.created = rec.ts;
+  if(P.me && !rec.by) rec.by = P.me;
+  const a = D[col], i = a.findIndex(r => r.id === rec.id);
+  if(i >= 0) a[i] = rec; else a.push(rec);
+}
+function removeRec(col, id){ D[col] = D[col].filter(r => r.id !== id); D.tomb[id] = Date.now(); }
+function getRec(col, id){ return D[col].find(r => r.id === id); }
+
+const mem = id => D.members.find(m => m.id === id);
+const memName = id => (mem(id) || {name:'?'}).name;
+const memColor = id => (mem(id) || {color:'#999'}).color;
+function avatar(id){ const m = mem(id); if(!m) return ''; return `<span class="av" style="background:${esc(m.color)}" title="${esc(m.name)}">${esc((m.name||'?').trim().charAt(0).toUpperCase())}</span>`; }
+function membersSorted(){ return [...D.members].sort((a,b)=> (a.order??0)-(b.order??0) || a.name.localeCompare(b.name)); }
+function memberChips(selected, attr, multi){
+  return membersSorted().map(m => `<button type="button" class="chip m ${selected.includes(m.id)?'on':''}" style="--c:${esc(m.color)}" data-${attr}="${esc(m.id)}" onclick="toggleChip(this,${multi?1:0})"><span class="dot" style="--c:${esc(m.color)}"></span>${esc(m.name)}</button>`).join('');
+}
+function toggleChip(el, multi){
+  if(!multi) el.parentElement.querySelectorAll('.chip').forEach(c => { if(c!==el) c.classList.remove('on'); });
+  el.classList.toggle('on');
+}
+const chosen = sel => $$(sel + ' .chip.on').map(c => c.dataset.who || c.dataset.pick || c.dataset.dow);
+
+/* ---------- events & recurrence ---------- */
+function occursOn(ev, day){
+  if(!ev.date || day < ev.date) return false;
+  const rep = ev.repeat || 'none';
+  if(rep === 'none') return day === ev.date || (!!ev.endDate && day <= ev.endDate);
+  if(ev.until && day > ev.until) return false;
+  if((ev.skip||[]).includes(day)) return false;
+  const a = parseYmd(ev.date), b = parseYmd(day);
+  if(rep === 'weekly' || rep === 'fortnightly'){
+    const days = (ev.days && ev.days.length) ? ev.days.map(Number) : [a.getDay()];
+    if(!days.includes(b.getDay())) return false;
+    if(rep === 'weekly') return true;
+    return (dayDiff(monday(ev.date), monday(day)) / 7) % 2 === 0;
+  }
+  if(rep === 'monthly') return a.getDate() === b.getDate();
+  if(rep === 'yearly') return a.getDate() === b.getDate() && a.getMonth() === b.getMonth();
+  return false;
+}
+/* ---------- NZ public holidays & school terms ---------- */
+// Terms: NZ Gazette 2025-sl4001 / 2025-sl5849. Term 1 start and Term 4 end are the Ministry's earliest start / latest finish; schools pick within a window.
+const TERMS = {
+  2026: [['2026-01-26','2026-04-02'],['2026-04-20','2026-07-03'],['2026-07-20','2026-09-25'],['2026-10-12','2026-12-18']],
+  2027: [['2027-01-28','2027-04-09'],['2027-04-27','2027-07-02'],['2027-07-19','2027-09-24'],['2027-10-11','2027-12-17']],
+  2028: [['2028-01-31','2028-04-13'],['2028-05-01','2028-07-07'],['2028-07-24','2028-09-29'],['2028-10-16','2028-12-15']]
+};
+// Matariki dates are set in Te Kāhui o Matariki Public Holiday Act 2022
+const MATARIKI = {2025:'2025-06-20', 2026:'2026-07-10', 2027:'2027-06-25', 2028:'2028-07-14', 2029:'2029-07-06', 2030:'2030-06-21'};
+function easterSunday(y){
+  const a=y%19, b=Math.floor(y/100), c=y%100, d=Math.floor(b/4), e=b%4, f=Math.floor((b+8)/25), g=Math.floor((b-f+1)/3),
+        h=(19*a+b-d-g+15)%30, i=Math.floor(c/4), k=c%4, l=(32+2*e+2*i-h-k)%7, m=Math.floor((a+11*h+22*l)/451),
+        mo=Math.floor((h+l-7*m+114)/31), da=((h+l-7*m+114)%31)+1;
+  return ymd(new Date(y, mo-1, da));
+}
+function nthMonday(y, m, n){ const s = y + '-' + pad(m) + '-01'; const w = parseYmd(s).getDay(); return addDays(s, ((8-w)%7) + 7*(n-1)); }
+function nearestMonday(s){ const back = (parseYmd(s).getDay()+6)%7; return back <= 3 ? addDays(s,-back) : addDays(s, 7-back); }
+function mondayise(s){ const w = parseYmd(s).getDay(); return w===6 ? addDays(s,2) : w===0 ? addDays(s,1) : s; }
+function mondayisePair(s){ const w = parseYmd(s).getDay();
+  if(w===6) return [addDays(s,2), addDays(s,3)]; if(w===0) return [addDays(s,2), addDays(s,1)]; if(w===5) return [s, addDays(s,3)]; return [s, addDays(s,1)]; }
+const holCache = {};
+function nzHolidays(y){
+  if(holCache[y]) return holCache[y];
+  const out = {};
+  const add = (actual, obs, name, emoji) => {
+    (out[actual] = out[actual] || []).push(emoji + ' ' + name);
+    if(obs !== actual) (out[obs] = out[obs] || []).push(emoji + ' ' + name + ' (day off)');
+  };
+  const ny = y + '-01-01', [ny1, ny2] = mondayisePair(ny);
+  add(ny, ny1, "New Year's Day", '🎆'); add(addDays(ny,1), ny2, "Day after New Year's", '🎆');
+  const ak = nearestMonday(y + '-01-29'); add(ak, ak, 'Auckland Anniversary (Waikato)', '🇳🇿');
+  add(y + '-02-06', mondayise(y + '-02-06'), 'Waitangi Day', '🇳🇿');
+  const es = easterSunday(y); add(addDays(es,-2), addDays(es,-2), 'Good Friday', '🐣'); add(addDays(es,1), addDays(es,1), 'Easter Monday', '🐣');
+  add(y + '-04-25', mondayise(y + '-04-25'), 'ANZAC Day', '🌺');
+  add(nthMonday(y,6,1), nthMonday(y,6,1), "King's Birthday", '👑');
+  if(MATARIKI[y]) add(MATARIKI[y], MATARIKI[y], 'Matariki', '✨');
+  add(nthMonday(y,10,4), nthMonday(y,10,4), 'Labour Day', '🇳🇿');
+  const xm = y + '-12-25', [x1, x2] = mondayisePair(xm);
+  add(xm, x1, 'Christmas Day', '🎄'); add(addDays(xm,1), x2, 'Boxing Day', '🎁');
+  return holCache[y] = out;
+}
+function holidaysOn(day){ return nzHolidays(+day.slice(0,4))[day] || []; }
+function allTerms(){ const a = []; Object.keys(TERMS).sort().forEach(y => TERMS[y].forEach((t,i) => a.push({y:+y, n:i+1, start:t[0], end:t[1]}))); return a; }
+const TERMLIST = allTerms();
+function schoolHolidayRange(day){
+  for(let i=0;i<TERMLIST.length-1;i++){ const a = TERMLIST[i], b = TERMLIST[i+1]; if(day > a.end && day < b.start) return {start: addDays(a.end,1), end: addDays(b.start,-1), next: b}; }
+  return null;
+}
+function nextSchoolHolidays(from){
+  const cur = schoolHolidayRange(from); if(cur) return {inHols: true, ...cur};
+  const t = TERMLIST.find(t => t.end >= from); if(!t) return null;
+  const r = schoolHolidayRange(addDays(t.end,1)); return r ? {inHols:false, ...r} : null;
+}
+function termEndAfter(day){ const t = TERMLIST.find(t => t.end >= day); return t ? t.end : ''; }
+function virtualOn(day, quiet){
+  const v = [];
+  if(P.showHol !== false) holidaysOn(day).forEach((n,i) => v.push({id:'v-h'+day+i, virtual:true, allDay:true, cat:'nzhol', title:n}));
+  if(P.showTerms !== false){
+    TERMLIST.forEach(t => {
+      if(t.start === day) v.push({id:'v-ts'+day, virtual:true, allDay:true, cat:'term', title:`🏫 Term ${t.n} starts${t.n===1?' (earliest — check your school)':''}`});
+      if(t.end === day) v.push({id:'v-te'+day, virtual:true, allDay:true, cat:'term', title:`🏫 Last day of Term ${t.n}${t.n===4?' (latest — check your school)':''}`});
+    });
+    if(quiet){ const r = schoolHolidayRange(day); if(r) v.push({id:'v-sh'+day, virtual:true, allDay:true, cat:'shol', quiet:true, title:`🏖️ School holidays — day ${dayDiff(r.start,day)+1} of ${dayDiff(r.start,r.end)+1}`}); }
+  }
+  return v;
+}
+function nextOccurrence(e, from, horizon){ for(let i=0;i<=(horizon||400);i++){ const d = addDays(from,i); if(occursOn(e,d)) return d; } return ''; }
+function evSort(a, b){ return (b.virtual?1:0) - (a.virtual?1:0) || (b.allDay?1:0) - (a.allDay?1:0) || (a.start||'').localeCompare(b.start||'') || a.title.localeCompare(b.title); }
+function eventsOn(day, filter, quiet){
+  return [...virtualOn(day, quiet), ...D.events.filter(e => occursOn(e, day) && filterOk(e, filter))].sort(evSort);
+}
+function realEventsOn(day, filter){ return D.events.filter(e => occursOn(e, day) && filterOk(e, filter)); }
+function filterOk(e, f){ if(!f || f === 'all') return true; return !(e.who && e.who.length) || e.who.includes(f) || e.taking === f; }
+function evColor(e){ return (e.who && e.who.length && mem(e.who[0])) ? memColor(e.who[0]) : '#8a938f'; }
+function evRow(e, day){
+  if(e.virtual) return `<div class="ev virt" style="--c:${e.cat==='nzhol'?'var(--warn)':'#c9a227'}"><div class="ev-time">${esc(VCATS[e.cat][1])}</div><div class="ev-main"><div class="ev-title">${esc(e.title)}</div></div></div>`;
+  const cat = CATS[e.cat] || CATS.other;
+  const time = e.allDay ? 'All day' : (fmtTime(e.start) + (e.end ? '–' + fmtTime(e.end) : '')) || '';
+  const who = (e.who && e.who.length) ? e.who.map(avatar).join('') : '<span class="small muted">All</span>';
+  return `<div class="ev" style="--c:${esc(evColor(e))}" onclick="eventForm('${esc(e.id)}','${day}')">
+    <div class="ev-time">${esc(time)}${e.repeat && e.repeat!=='none' ? ' 🔁' : ''}</div>
+    <div class="ev-main"><div class="ev-title">${cat[0]} ${esc(e.title)}</div>
+      ${e.loc ? `<div class="small muted">📍 ${esc(e.loc)}</div>` : ''}
+      ${e.taking && mem(e.taking) ? `<div class="small">🚗 ${esc(memName(e.taking))} taking</div>` : ''}
+      ${e.notes ? `<div class="small muted">${esc(e.notes).slice(0,140)}</div>` : ''}${e.countdown ? `<div class="small muted">⏳ on countdown</div>` : ''}</div>
+    <div class="ev-who">${who}</div></div>`;
+}
+
+/* ---------- navigation & sheets ---------- */
+function go(tab){ P.tab = tab; savePrefs(); renderAll(); window.scrollTo(0,0); }
+let sheetOpen = false;
+function openSheet(html){
+  $('#sheetbody').innerHTML = html;
+  $('#sheet').classList.add('on');
+  if(!sheetOpen){ sheetOpen = true; try{ history.pushState({sheet:1}, ''); }catch(e){} }
+  $('#sheetbody').scrollTop = 0;
+}
+function hideSheet(){ sheetOpen = false; $('#sheet').classList.remove('on'); $('#sheetbody').innerHTML = ''; }
+function closeSheet(){ if(!sheetOpen) return; if(history.state && history.state.sheet){ history.back(); } else hideSheet(); }
+window.addEventListener('popstate', () => { if(sheetOpen) hideSheet(); });
+function fabAction(){
+  if(P.tab === 'lists') return $('#newitem') && $('#newitem').focus();
+  if(P.tab === 'tasks') return taskForm();
+  if(P.tab === 'meals') return mealForm(today() >= mealWeek && today() <= addDays(mealWeek,6) ? today() : mealWeek);
+  eventForm(null, P.tab === 'cal' ? selDay : today());
+}
+
+/* ---------- render ---------- */
+function renderAll(){
+  $('#apptitle').textContent = D.settings.name || 'Family Hub';
+  document.title = D.settings.name || 'Family Hub';
+  $$('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === P.tab));
+  $$('section.view').forEach(s => s.classList.toggle('on', s.id === 'v-' + P.tab));
+  $('#fab').classList.toggle('hide', P.tab === 'lists');
+  ({home:renderHome, cal:renderCal, lists:renderLists, tasks:renderTasks, meals:renderMeals}[P.tab] || renderHome)();
+  updateSyncStatus();
+}
+
+function renderHome(){
+  const t = today(), tm = addDays(t,1);
+  const hr = new Date().getHours();
+  const greet = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+  const me = mem(P.me);
+  let h = `<div class="big">${greet}${me ? ', ' + esc(me.name) : ''}<div class="small muted" style="font-weight:400">${fmtDay(t, true)}</div></div>`;
+  if(!D.members.length){
+    h += `<div class="card"><h2>Get started</h2><p class="small">Add your family first so you can colour-code the calendar and hand out jobs. Then set up GitHub sync so everyone's phone shares the same data.</p><button class="btn" onclick="openSettings()">Add family members</button></div>`;
+  }
+  const evT = eventsOn(t,'all',true), evTm = eventsOn(tm,'all',true);
+  h += `<div class="card"><h2>Today<span class="sp"></span><button class="btn ghost sm" onclick="eventForm(null,'${t}')">+ Event</button></h2>${evT.length ? evT.map(e => evRow(e,t)).join('') : '<div class="empty">Nothing on today.</div>'}</div>`;
+  h += `<div class="card"><h2>Tomorrow</h2>${evTm.length ? evTm.map(e => evRow(e,tm)).join('') : '<div class="empty">Nothing on tomorrow.</div>'}</div>`;
+  const cds = countdowns();
+  if(cds.length) h += `<div class="card"><h2>Countdowns</h2>${cds.slice(0,6).map(c => { const n = dayDiff(t, c.date); return `<div class="cd"><div class="grow"><div style="font-weight:600">${esc(c.title)}</div><div class="small muted">${fmtDay(c.date, true)}</div></div><div class="num">${n===0 ? 'Today!' : n}<small>${n===0 ? '🎉' : n===1 ? 'sleep' : 'sleeps'}</small></div></div>`; }).join('')}</div>`;
+  // rest of week
+  let wk = '';
+  for(let i=2;i<=7;i++){ const d = addDays(t,i); const ev = eventsOn(d); if(ev.length) wk += `<div class="dayhead">${relDay(d)}</div>` + ev.map(e=>evRow(e,d)).join(''); }
+  if(wk) h += `<div class="card"><h2>Coming up this week</h2>${wk}</div>`;
+  // jobs
+  const due = D.tasks.filter(x => !x.done && x.due && x.due <= t).sort((a,b)=> a.due.localeCompare(b.due));
+  h += `<div class="card"><h2>Jobs due<span class="sp"></span><button class="btn ghost sm" onclick="go('tasks')">All jobs</button></h2>${due.length ? due.map(taskRow).join('') : '<div class="empty">No jobs due. 🎉</div>'}</div>`;
+  // dinner + lists
+  const meal = getRec('meals', 'meal-' + t);
+  h += `<div class="card"><h2>Tonight's dinner</h2><div class="stat" onclick="mealForm('${t}')"><span style="font-size:22px">🍽</span><div class="grow">${meal && meal.title ? esc(meal.title) + (meal.cook && mem(meal.cook) ? ` <span class="small muted">· ${esc(memName(meal.cook))} cooking</span>` : '') : '<span class="muted">Not planned yet — tap to add</span>'}</div></div></div>`;
+  const lists = listsSorted();
+  h += `<div class="card"><h2>Lists</h2>${lists.map(l => { const n = D.items.filter(i => i.list===l.id && !i.done).length; return `<div class="stat" onclick="P.list='${esc(l.id)}';go('lists')"><span style="font-size:20px">🛒</span><div class="grow">${esc(l.name)}</div><b>${n}</b><span class="muted small">to get</span></div>`; }).join('') || '<div class="empty">No lists yet.</div>'}</div>`;
+  h += `<div class="foot">build ${BUILD}</div>`;
+  $('#v-home').innerHTML = h;
+}
+
+function countdowns(){
+  const t = today(), out = [];
+  D.events.filter(e => e.countdown).forEach(e => { const d = nextOccurrence(e, t); if(d) out.push({title: (CATS[e.cat]||CATS.other)[0] + ' ' + e.title, date: d}); });
+  if(P.cdSchool !== false){
+    const s = nextSchoolHolidays(t);
+    if(s){ if(s.inHols) out.push({title:`🏫 Back to school (Term ${s.next.n})`, date: s.next.start}); else out.push({title:'🏖️ School holidays', date: s.start}); }
+  }
+  if(P.cdXmas !== false){ let x = t.slice(0,4) + '-12-25'; if(x < t) x = (+t.slice(0,4)+1) + '-12-25'; out.push({title:'🎄 Christmas', date:x}); }
+  return out.sort((a,b) => a.date.localeCompare(b.date));
+}
+function calFilterChips(){
+  return `<div class="chips"><button class="chip ${P.calFilter==='all'?'on':''}" onclick="P.calFilter='all';savePrefs();renderCal()">Everyone</button>${membersSorted().map(m => `<button class="chip m ${P.calFilter===m.id?'on':''}" style="--c:${esc(m.color)}" onclick="P.calFilter='${esc(m.id)}';savePrefs();renderCal()"><span class="dot" style="--c:${esc(m.color)}"></span>${esc(m.name)}</button>`).join('')}</div>`;
+}
+function renderCal(){
+  const f = P.calFilter;
+  let h = `<div class="row" style="margin-bottom:8px"><div class="seg"><button class="${P.calView==='month'?'on':''}" onclick="P.calView='month';savePrefs();renderCal()">Month</button><button class="${P.calView==='agenda'?'on':''}" onclick="P.calView='agenda';savePrefs();renderCal()">List</button></div><span class="grow"></span><button class="btn ghost sm" onclick="calMonth=today().slice(0,8)+'01';selDay=today();renderCal()">Today</button></div>`;
+  h += calFilterChips();
+  if(P.calView === 'agenda'){
+    const t = today(); let body = '';
+    for(let i=0;i<60;i++){ const d = addDays(t,i); const ev = eventsOn(d,f); if(ev.length) body += `<div class="dayhead ${i===0?'today':''}">${relDay(d)}${i>1?'':' · '+fmtDay(d)}</div>` + ev.map(e=>evRow(e,d)).join(''); }
+    h += `<div class="card"><h2>Next 60 days</h2>${body || '<div class="empty">Nothing coming up.</div>'}</div>`;
+    $('#v-cal').innerHTML = h; return;
+  }
+  const first = parseYmd(calMonth);
+  const off = (first.getDay()+6)%7;
+  const dim = new Date(first.getFullYear(), first.getMonth()+1, 0).getDate();
+  const rows = Math.ceil((off+dim)/7);
+  const start = addDays(calMonth, -off), t = today();
+  h += `<div class="calnav"><button class="btn ghost sm" onclick="calMonth=addMonths(calMonth,-1);renderCal()">‹</button><div class="t">${MONL[first.getMonth()]} ${first.getFullYear()}</div><button class="btn ghost sm" onclick="calMonth=addMonths(calMonth,1);renderCal()">›</button></div>`;
+  h += `<div class="grid">${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(x=>`<div class="h">${x}</div>`).join('')}`;
+  for(let i=0;i<rows*7;i++){
+    const d = addDays(start,i), ev = eventsOn(d,f);
+    const cls = ['cell', d.slice(0,7)!==calMonth.slice(0,7)?'out':'', d===t?'today':'', d===selDay?'sel':'', (P.showTerms!==false && schoolHolidayRange(d))?'shol':'', (P.showHol!==false && holidaysOn(d).length)?'phol':''].join(' ');
+    h += `<div class="${cls}" onclick="selDay='${d}';renderCal()"><span class="n">${parseYmd(d).getDate()}</span><span class="ds">${ev.slice(0,6).map(e=>`<i style="background:${esc(evColor(e))}"></i>`).join('')}</span></div>`;
+  }
+  h += `</div>`;
+  if(P.showTerms !== false || P.showHol !== false) h += `<div class="legend">${P.showTerms!==false?'<span><i></i>School holidays</span>':''}${P.showHol!==false?'<span><b class="warn">12</b> Public holiday</span>':''}</div>`;
+  const ev = eventsOn(selDay,f,true);
+  h += `<div class="card" style="margin-top:12px"><h2>${relDay(selDay)}${relDay(selDay)!==fmtDay(selDay)?' · '+fmtDay(selDay):''}<span class="sp"></span><button class="btn ghost sm" onclick="eventForm(null,'${selDay}')">+ Event</button></h2>${ev.length ? ev.map(e=>evRow(e,selDay)).join('') : '<div class="empty">Nothing on.</div>'}</div>`;
+  $('#v-cal').innerHTML = h;
+}
+
+/* ---------- event form ---------- */
+function eventForm(id, day){
+  const e = id ? getRec('events', id) : null;
+  if(id && !e){ toast('That event was deleted'); return; }
+  const v = e ? {...e} : {title:'', date: day || today(), allDay:false, start:'', end:'', who: P.calFilter!=='all' ? [P.calFilter] : [], taking:'', cat:'activity', loc:'', notes:'', repeat:'none', days:[], until:'', endDate:''};
+  const recurring = e && e.repeat && e.repeat !== 'none';
+  const dowChips = [1,2,3,4,5,6,0].map(i => `<button type="button" class="chip ${(v.days && v.days.length ? v.days.map(Number) : [parseYmd(v.date).getDay()]).includes(i)?'on':''}" data-dow="${i}" onclick="toggleChip(this,1)">${DOW[i]}</button>`).join('');
+  openSheet(`<h3>${e ? 'Edit event' : 'New event'}</h3>
+    ${recurring && day ? `<div class="small muted">Repeating event — changes here apply to every date. Opened from ${fmtDay(day)}.</div>` : ''}
+    <label class="f">What</label><input id="f-title" value="${esc(v.title)}" placeholder="e.g. Swimming lesson" autocomplete="off">
+    <label class="f">Type</label><div class="chips" id="f-cat">${Object.entries(CATS).map(([k,c]) => `<button type="button" class="chip ${v.cat===k?'on':''}" data-pick="${k}" onclick="toggleChip(this,0)">${c[0]} ${c[1]}</button>`).join('')}</div>
+    <label class="f">Who's it for (leave blank for everyone)</label><div class="chips" id="f-who">${memberChips(v.who||[], 'who', true) || '<span class="small muted">Add family members in ⚙︎ settings</span>'}</div>
+    <label class="f">Date</label><input type="date" id="f-date" value="${esc(v.date)}">
+    <label class="row" style="margin-top:10px;gap:8px"><input type="checkbox" id="f-allday" ${v.allDay?'checked':''} onchange="evFormSync()" style="width:auto"> All day</label>
+    <div class="row" id="f-times"><div class="grow"><label class="f">Starts</label><input type="time" id="f-start" value="${esc(v.start||'')}"></div><div class="grow"><label class="f">Ends</label><input type="time" id="f-end" value="${esc(v.end||'')}"></div></div>
+    <div id="f-multi"><label class="f">Last day (for multi-day things like camp or holidays)</label><input type="date" id="f-enddate" value="${esc(v.endDate||'')}"></div>
+    <label class="f">Repeats</label><select id="f-repeat" onchange="evFormSync()">${REPEAT_EV.map(([k,l]) => `<option value="${k}" ${v.repeat===k?'selected':''}>${l}</option>`).join('')}</select>
+    <div id="f-dows"><label class="f">On these days</label><div class="chips" id="f-days">${dowChips}</div></div>
+    <div id="f-untilwrap"><label class="f">Until (optional)</label><input type="date" id="f-until" value="${esc(v.until||'')}">
+      <div class="chips" style="margin-top:6px"><button type="button" class="chip" onclick="const e=termEndAfter($('#f-date').value||today()); if(e){$('#f-until').value=e;} else toast('No term dates that far ahead')">End of term</button><button type="button" class="chip" onclick="$('#f-until').value=''">No end</button></div></div>
+    <label class="f">Reminder (used when you add it to your phone calendar)</label><select id="f-remind">${REMIND.map(([k,l]) => `<option value="${k}" ${String(v.remind ?? '30')===k?'selected':''}>${l}</option>`).join('')}</select>
+    <div class="small muted" id="f-remindnote">All-day events remind at 6pm the evening before.</div>
+    <label class="ck"><input type="checkbox" id="f-countdown" ${v.countdown?'checked':''}> ⏳ Show a countdown on Home</label>
+    <label class="f">🚗 Who's taking / picking up</label><select id="f-taking"><option value="">—</option>${membersSorted().map(m => `<option value="${esc(m.id)}" ${v.taking===m.id?'selected':''}>${esc(m.name)}</option>`).join('')}</select>
+    <label class="f">Where</label><input id="f-loc" value="${esc(v.loc||'')}" placeholder="optional">
+    <label class="f">Notes</label><textarea id="f-notes" placeholder="Bring togs, $5 for sausage sizzle…">${esc(v.notes||'')}</textarea>
+    <div class="btns"><button class="btn" onclick="saveEvent(${e ? `'${esc(e.id)}'` : 'null'})">Save</button><button class="btn ghost" onclick="closeSheet()">Cancel</button></div>
+    ${e ? `<div class="btns"><button class="btn ghost sm" onclick="openGcal('${esc(e.id)}')">📅 Google Calendar</button><button class="btn ghost sm" onclick="downloadIcs('${esc(e.id)}')">⬇ Phone calendar (.ics)</button></div>` : ''}
+    ${e ? `<div class="btns">${recurring && day ? `<button class="btn danger sm" onclick="skipOccurrence('${esc(e.id)}','${day}')">Remove ${fmtDay(day)} only</button>` : ''}<button class="btn danger sm" onclick="deleteEvent('${esc(e.id)}')">Delete${recurring?' whole series':''}</button></div>` : ''}`);
+  evFormSync();
+  if(!e) setTimeout(()=> $('#f-title') && $('#f-title').focus(), 60);
+}
+function evFormSync(){
+  const allDay = $('#f-allday').checked, rep = $('#f-repeat').value;
+  $('#f-times').classList.toggle('hide', allDay);
+  $('#f-multi').classList.toggle('hide', !(allDay && rep === 'none'));
+  $('#f-dows').classList.toggle('hide', !(rep === 'weekly' || rep === 'fortnightly'));
+  $('#f-untilwrap').classList.toggle('hide', rep === 'none');
+  $('#f-remindnote').classList.toggle('hide', !allDay);
+}
+function saveEvent(id){
+  const title = $('#f-title').value.trim();
+  if(!title){ toast('Give it a name'); $('#f-title').focus(); return; }
+  const date = $('#f-date').value; if(!date){ toast('Pick a date'); return; }
+  const old = id ? getRec('events', id) : null;
+  const rep = $('#f-repeat').value, allDay = $('#f-allday').checked;
+  const rec = Object.assign({}, old || {id: uid()}, {
+    title, date, allDay, cat: chosen('#f-cat')[0] || 'other',
+    start: allDay ? '' : $('#f-start').value, end: allDay ? '' : $('#f-end').value,
+    endDate: (allDay && rep==='none' && $('#f-enddate').value > date) ? $('#f-enddate').value : '',
+    who: chosen('#f-who'), taking: $('#f-taking').value, loc: $('#f-loc').value.trim(), notes: $('#f-notes').value.trim(),
+    repeat: rep, days: (rep==='weekly'||rep==='fortnightly') ? chosen('#f-days').map(Number) : [],
+    until: rep==='none' ? '' : $('#f-until').value,
+    remind: $('#f-remind').value, countdown: $('#f-countdown').checked
+  });
+  if((rep==='weekly'||rep==='fortnightly') && !rec.days.length) rec.days = [parseYmd(date).getDay()];
+  if(rec.end && rec.start && rec.end < rec.start){ toast('End time is before the start'); return; }
+  upsert('events', rec);
+  closeSheet(); selDay = date; if(date.slice(0,7) !== calMonth.slice(0,7) && P.tab==='cal') calMonth = date.slice(0,8)+'01';
+  commit();
+  if(!old && P.offerCal !== false) offerCalendar(rec.id); else toast(old ? 'Event updated' : 'Event added');
+}
+function offerCalendar(id){
+  const e = getRec('events', id); if(!e) return;
+  openSheet(`<h3>Added ✓</h3><p class="small">Want a reminder for <b>${esc(e.title)}</b>? Put it in your phone calendar and it'll notify you${e.remind ? '' : ' (no reminder set — it will use your calendar’s default)'}.</p>
+    <div class="btns"><button class="btn" onclick="openGcal('${esc(id)}');closeSheet()">📅 Google Calendar</button><button class="btn ghost" onclick="downloadIcs('${esc(id)}');closeSheet()">⬇ .ics file</button></div>
+    <div class="btns"><button class="btn ghost sm" onclick="closeSheet()">No thanks</button><button class="btn ghost sm" onclick="P.offerCal=false;savePrefs();closeSheet();toast('Turn it back on in settings')">Don't ask again</button></div>`);
+}
+
+/* ---------- phone calendar export ---------- */
+const BYDAY = ['SU','MO','TU','WE','TH','FR','SA'];
+function rrule(e, allDay){
+  const rep = e.repeat || 'none'; if(rep === 'none') return '';
+  let r = rep==='weekly' ? 'FREQ=WEEKLY' : rep==='fortnightly' ? 'FREQ=WEEKLY;INTERVAL=2' : rep==='monthly' ? 'FREQ=MONTHLY' : 'FREQ=YEARLY';
+  if(rep==='weekly' || rep==='fortnightly') r += ';WKST=MO;BYDAY=' + (e.days && e.days.length ? e.days : [parseYmd(e.date).getDay()]).map(d => BYDAY[d]).join(',');
+  if(e.until) r += ';UNTIL=' + e.until.replace(/-/g,'') + (allDay ? '' : 'T235959');
+  return 'RRULE:' + r;
+}
+function evTimes(e){
+  const first = (e.repeat && e.repeat !== 'none') ? (nextOccurrence(e, e.date, 400) || e.date) : e.date;
+  const s = e.start || '09:00';
+  let end = e.end;
+  if(!end){ const [hh,mm] = s.split(':').map(Number); end = hh >= 23 ? '23:59' : pad(hh+1) + ':' + pad(mm); }
+  return {first, s, end};
+}
+const icsDT = (d, t) => d.replace(/-/g,'') + 'T' + t.replace(':','') + '00';
+const icsEsc = s => String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n');
+function icsFold(line){ const out = []; while(line.length > 73){ out.push(line.slice(0,73)); line = ' ' + line.slice(73); } out.push(line); return out.join('\r\n'); }
+function eventDetails(e){
+  const who = (e.who||[]).map(memName).join(', ');
+  return [who && 'For: ' + who, e.taking && mem(e.taking) && 'Taking: ' + memName(e.taking), e.notes].filter(Boolean).join('\n');
+}
+function icsFor(e){
+  const {first, s, end} = evTimes(e);
+  const now = new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
+  const L = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Family Hub//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH','BEGIN:VEVENT',
+    'UID:' + e.id + '@familyhub', 'DTSTAMP:' + now, 'SUMMARY:' + icsEsc((CATS[e.cat]||CATS.other)[0] + ' ' + e.title)];
+  if(e.allDay){ L.push('DTSTART;VALUE=DATE:' + first.replace(/-/g,''), 'DTEND;VALUE=DATE:' + addDays(e.endDate && e.repeat==='none' ? e.endDate : first, 1).replace(/-/g,'')); }
+  else L.push('DTSTART:' + icsDT(first, s), 'DTEND:' + icsDT(first, end));
+  const rr = rrule(e, e.allDay); if(rr) L.push(rr);
+  (e.skip||[]).forEach(d => L.push(e.allDay ? 'EXDATE;VALUE=DATE:' + d.replace(/-/g,'') : 'EXDATE:' + icsDT(d, s)));
+  if(e.loc) L.push('LOCATION:' + icsEsc(e.loc));
+  const det = eventDetails(e); if(det) L.push('DESCRIPTION:' + icsEsc(det));
+  if(e.remind !== '' && e.remind != null){
+    const trig = e.allDay ? '-PT6H' : (+e.remind === 0 ? 'PT0M' : '-PT' + (+e.remind) + 'M');
+    L.push('BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:' + icsEsc(e.title),'TRIGGER:' + trig,'END:VALARM');
+  }
+  L.push('END:VEVENT','END:VCALENDAR');
+  return L.map(icsFold).join('\r\n') + '\r\n';
+}
+function downloadIcs(id){
+  const e = getRec('events', id); if(!e) return;
+  const blob = new Blob([icsFor(e)], {type:'text/calendar'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = (e.title.replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'-') || 'event') + '.ics';
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('Downloaded — open it to add to your calendar');
+}
+function gcalUrl(e){
+  const {first, s, end} = evTimes(e);
+  const dates = e.allDay ? first.replace(/-/g,'') + '/' + addDays(e.endDate && e.repeat==='none' ? e.endDate : first, 1).replace(/-/g,'') : icsDT(first, s) + '/' + icsDT(first, end);
+  const q = new URLSearchParams({action:'TEMPLATE', text:(CATS[e.cat]||CATS.other)[0] + ' ' + e.title, dates, ctz:'Pacific/Auckland'});
+  const det = eventDetails(e); if(det) q.set('details', det);
+  if(e.loc) q.set('location', e.loc);
+  const rr = rrule(e, e.allDay); if(rr) q.set('recur', rr);
+  return 'https://calendar.google.com/calendar/render?' + q.toString();
+}
+function openGcal(id){ const e = getRec('events', id); if(e) window.open(gcalUrl(e), '_blank'); }
+function skipOccurrence(id, day){
+  const e = getRec('events', id); if(!e) return;
+  const rec = {...e, skip: [...new Set([...(e.skip||[]), day])]};
+  upsert('events', rec); closeSheet(); commit(); toast('Removed ' + fmtDay(day));
+}
+function deleteEvent(id){
+  const e = getRec('events', id); if(!e) return;
+  if(!confirm(`Delete "${e.title}"${e.repeat && e.repeat!=='none' ? ' and every repeat of it' : ''}?`)) return;
+  removeRec('events', id); closeSheet(); commit(); toast('Deleted');
+}
+
+/* ---------- lists ---------- */
+function listsSorted(){ return [...D.lists].sort((a,b)=> (a.order??0)-(b.order??0) || a.name.localeCompare(b.name)); }
+function currentList(){ const ls = listsSorted(); return ls.find(l => l.id === P.list) || ls[0]; }
+function renderLists(){
+  const ls = listsSorted(), L = currentList();
+  let h = `<div class="chips">${ls.map(l => { const n = D.items.filter(i=>i.list===l.id && !i.done).length; return `<button class="chip ${L && l.id===L.id?'on':''}" onclick="P.list='${esc(l.id)}';savePrefs();renderLists()">${esc(l.name)}${n?` <b>${n}</b>`:''}</button>`; }).join('')}<button class="chip" onclick="newList()">+ New list</button></div>`;
+  if(!L){ $('#v-lists').innerHTML = h + '<div class="card"><div class="empty">No lists. Tap “+ New list”.</div></div>'; return; }
+  const items = D.items.filter(i => i.list === L.id);
+  const open = items.filter(i => !i.done).sort((a,b)=> (a.created||0)-(b.created||0));
+  const done = items.filter(i => i.done).sort((a,b)=> (b.ts||0)-(a.ts||0));
+  const names = [...new Set([...D.items.map(i=>i.name), ...(P.recent||[])])].sort((a,b)=>a.localeCompare(b));
+  h += `<div class="card"><h2>${esc(L.name)}<span class="sp"></span><button class="btn ghost sm" onclick="listMenu('${esc(L.id)}')">⋯</button></h2>
+    <form class="add" onsubmit="addItems(event,'${esc(L.id)}')"><input id="newitem" list="itemhist" placeholder="Add… (commas for several)" autocomplete="off"><button class="btn">Add</button></form>
+    <datalist id="itemhist">${names.map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
+    ${open.length ? open.map(itemRow).join('') : '<div class="empty">All done — nothing to get.</div>'}</div>`;
+  if(done.length) h += `<div class="card"><h2>Ticked (${done.length})<span class="sp"></span><button class="btn ghost sm" onclick="clearTicked('${esc(L.id)}')">Clear ticked</button></h2>${done.map(itemRow).join('')}</div>`;
+  $('#v-lists').innerHTML = h;
+}
+function itemRow(i){
+  return `<div class="item ${i.done?'done':''}" onclick="toggleItem('${esc(i.id)}')"><span class="box">${i.done?'✓':''}</span><span class="name">${esc(i.name)}</span>${i.by && mem(i.by) ? `<span class="small muted">${esc(memName(i.by))}</span>` : ''}<button class="x" onclick="event.stopPropagation();delItem('${esc(i.id)}')">✕</button></div>`;
+}
+function addToList(listId, raw){
+  const name = raw.trim(); if(!name) return 0;
+  const same = D.items.filter(i => i.list===listId && i.name.toLowerCase() === name.toLowerCase());
+  if(same.some(i => !i.done)) return 0;
+  if(same.length){ upsert('items', {...same[0], done:false, by: P.me || same[0].by}); }
+  else upsert('items', {id: uid(), list: listId, name, done:false});
+  P.recent = [name, ...(P.recent||[]).filter(n => n.toLowerCase() !== name.toLowerCase())].slice(0,150);
+  return 1;
+}
+function addItems(ev, listId){
+  ev.preventDefault();
+  const inp = $('#newitem'); const parts = inp.value.split(/[,\n]/);
+  let n = 0; parts.forEach(p => n += addToList(listId, p));
+  if(!n && inp.value.trim()) toast('Already on the list');
+  inp.value = ''; savePrefs(); commit();
+  setTimeout(()=> $('#newitem') && $('#newitem').focus(), 30);
+}
+function toggleItem(id){ const i = getRec('items', id); if(!i) return; upsert('items', {...i, done: !i.done}); commit(); }
+function delItem(id){ removeRec('items', id); commit(); }
+function clearTicked(listId){ D.items.filter(i => i.list===listId && i.done).forEach(i => removeRec('items', i.id)); commit(); toast('Cleared'); }
+function newList(){
+  const name = (prompt('Name for the new list (e.g. Hardware, Pharmacy, Christmas)') || '').trim(); if(!name) return;
+  const rec = {id: uid(), name, order: D.lists.length}; upsert('lists', rec); P.list = rec.id; savePrefs(); commit();
+}
+function listMenu(id){
+  const L = getRec('lists', id); if(!L) return;
+  openSheet(`<h3>${esc(L.name)}</h3><label class="f">Rename</label><input id="f-lname" value="${esc(L.name)}">
+    <div class="btns"><button class="btn" onclick="renameList('${esc(id)}')">Save</button><button class="btn ghost" onclick="closeSheet()">Cancel</button></div>
+    <div class="btns"><button class="btn danger sm" onclick="deleteList('${esc(id)}')">Delete list and its items</button></div>`);
+}
+function renameList(id){ const L = getRec('lists', id); const n = $('#f-lname').value.trim(); if(!L || !n) return; upsert('lists', {...L, name:n}); closeSheet(); commit(); }
+function deleteList(id){
+  const L = getRec('lists', id); if(!L || !confirm(`Delete the ${L.name} list?`)) return;
+  D.items.filter(i => i.list===id).forEach(i => removeRec('items', i.id)); removeRec('lists', id); closeSheet(); commit();
+}
+
+/* ---------- tasks / jobs ---------- */
+function advance(d, rep){ return rep==='daily' ? addDays(d,1) : rep==='weekly' ? addDays(d,7) : rep==='fortnightly' ? addDays(d,14) : rep==='monthly' ? addMonths(d,1) : d; }
+function taskRow(x){
+  const t = today(); const late = x.due && x.due < t && !x.done;
+  const dueTxt = x.done ? 'Done' : x.due ? relDay(x.due) : '';
+  return `<div class="task"><button class="circle" ${x.done?'style="background:var(--brand);border-color:var(--brand)"':''} onclick="completeTask('${esc(x.id)}')" title="Done"></button>
+    <div class="grow" onclick="taskForm('${esc(x.id)}')"><div style="${x.done?'text-decoration:line-through;color:var(--muted)':''}">${esc(x.title)}</div>
+    <div class="small ${late?'warn':'muted'}">${esc(dueTxt)}${x.repeat && x.repeat!=='none' ? ' · 🔁 ' + x.repeat : ''}${x.notes ? ' · ' + esc(x.notes).slice(0,60) : ''}</div></div>${x.who ? avatar(x.who) : ''}</div>`;
+}
+function renderTasks(){
+  const f = P.taskFilter, t = today();
+  let h = `<div class="chips"><button class="chip ${f==='all'?'on':''}" onclick="P.taskFilter='all';savePrefs();renderTasks()">Everyone</button>${membersSorted().map(m => `<button class="chip m ${f===m.id?'on':''}" style="--c:${esc(m.color)}" onclick="P.taskFilter='${esc(m.id)}';savePrefs();renderTasks()"><span class="dot" style="--c:${esc(m.color)}"></span>${esc(m.name)}</button>`).join('')}</div>`;
+  const all = D.tasks.filter(x => f==='all' || x.who===f || !x.who);
+  const open = all.filter(x => !x.done);
+  const by = (a,b) => (a.due||'9999').localeCompare(b.due||'9999') || a.title.localeCompare(b.title);
+  const groups = [
+    ['Overdue', open.filter(x => x.due && x.due < t)],
+    ['Today', open.filter(x => x.due === t)],
+    ['This week', open.filter(x => x.due && x.due > t && x.due <= addDays(t,7))],
+    ['Later', open.filter(x => x.due && x.due > addDays(t,7))],
+    ['Anytime', open.filter(x => !x.due)]
+  ];
+  let any = false;
+  for(const [name, xs] of groups){ if(!xs.length) continue; any = true; h += `<div class="card"><h2 class="${name==='Overdue'?'warn':''}">${name}</h2>${xs.sort(by).map(taskRow).join('')}</div>`; }
+  if(!any) h += `<div class="card"><div class="empty">No jobs. Tap + to add chores, reminders or things to sort.</div></div>`;
+  const done = all.filter(x => x.done).sort((a,b)=> (b.ts||0)-(a.ts||0));
+  if(done.length) h += `<div class="card"><h2>Done<span class="sp"></span><button class="btn ghost sm" onclick="clearDone()">Clear</button></h2>${done.slice(0,15).map(taskRow).join('')}</div>`;
+  $('#v-tasks').innerHTML = h;
+}
+function taskForm(id){
+  const x = id ? getRec('tasks', id) : null;
+  const v = x ? x : {title:'', who: P.taskFilter!=='all' ? P.taskFilter : '', due:'', repeat:'none', notes:''};
+  openSheet(`<h3>${x ? 'Edit job' : 'New job'}</h3>
+    <label class="f">Job</label><input id="t-title" value="${esc(v.title)}" placeholder="e.g. Bins out, sign permission slip" autocomplete="off">
+    <label class="f">Who</label><div class="chips" id="t-who">${memberChips(v.who ? [v.who] : [], 'who', false) || '<span class="small muted">Add family members in ⚙︎ settings</span>'}</div>
+    <label class="f">Due</label><input type="date" id="t-due" value="${esc(v.due||'')}">
+    <div class="chips" style="margin-top:6px"><button type="button" class="chip" onclick="$('#t-due').value=today()">Today</button><button type="button" class="chip" onclick="$('#t-due').value=addDays(today(),1)">Tomorrow</button><button type="button" class="chip" onclick="$('#t-due').value=''">No date</button></div>
+    <label class="f">Repeats</label><select id="t-repeat">${REPEAT_TASK.map(([k,l]) => `<option value="${k}" ${v.repeat===k?'selected':''}>${l}</option>`).join('')}</select>
+    <label class="f">Notes</label><textarea id="t-notes">${esc(v.notes||'')}</textarea>
+    <div class="btns"><button class="btn" onclick="saveTask(${x?`'${esc(x.id)}'`:'null'})">Save</button><button class="btn ghost" onclick="closeSheet()">Cancel</button></div>
+    ${x ? `<div class="btns"><button class="btn danger sm" onclick="deleteTask('${esc(x.id)}')">Delete</button></div>` : ''}`);
+  if(!x) setTimeout(()=> $('#t-title') && $('#t-title').focus(), 60);
+}
+function saveTask(id){
+  const title = $('#t-title').value.trim(); if(!title){ toast('What’s the job?'); return; }
+  const old = id ? getRec('tasks', id) : null;
+  let rep = $('#t-repeat').value, due = $('#t-due').value;
+  if(rep !== 'none' && !due) due = today();
+  upsert('tasks', Object.assign({}, old || {id: uid(), done:false}, {title, who: chosen('#t-who')[0] || '', due, repeat: rep, notes: $('#t-notes').value.trim()}));
+  closeSheet(); commit(); toast(old ? 'Job updated' : 'Job added');
+}
+function completeTask(id){
+  const x = getRec('tasks', id); if(!x) return;
+  if(x.done){ upsert('tasks', {...x, done:false}); commit(); return; }
+  if(x.repeat && x.repeat !== 'none'){
+    const t = today(); let next = advance(x.due || t, x.repeat);
+    while(next <= t) next = advance(next, x.repeat);
+    upsert('tasks', {...x, due: next, lastDone: t}); commit(); toast('Done — next due ' + relDay(next));
+  } else { upsert('tasks', {...x, done:true, doneOn: today()}); commit(); toast('Done 👍'); }
+}
+function deleteTask(id){ removeRec('tasks', id); closeSheet(); commit(); toast('Deleted'); }
+function clearDone(){ D.tasks.filter(x => x.done).forEach(x => removeRec('tasks', x.id)); commit(); }
+
+/* ---------- meals ---------- */
+function renderMeals(){
+  const t = today();
+  let h = `<div class="calnav"><button class="btn ghost sm" onclick="mealWeek=addDays(mealWeek,-7);renderMeals()">‹</button><div class="t" style="font-size:16px">Week of ${fmtDay(mealWeek)}</div><button class="btn ghost sm" onclick="mealWeek=addDays(mealWeek,7);renderMeals()">›</button></div>`;
+  h += `<div class="card"><h2>Dinners<span class="sp"></span>${mealWeek!==monday(t)?`<button class="btn ghost sm" onclick="mealWeek=monday(today());renderMeals()">This week</button>`:''}</h2>`;
+  let ingCount = 0;
+  for(let i=0;i<7;i++){
+    const d = addDays(mealWeek,i), m = getRec('meals','meal-'+d);
+    if(m && m.ingredients) ingCount += m.ingredients.split(/\n|,/).filter(s=>s.trim()).length;
+    h += `<div class="meal ${d===t?'today':''}" onclick="mealForm('${d}')"><div class="d">${DOW[parseYmd(d).getDay()]} ${parseYmd(d).getDate()}</div><div class="grow">${m && m.title ? esc(m.title) : '<span class="muted">+ add dinner</span>'}${m && m.ingredients ? `<div class="small muted">${esc(m.ingredients.replace(/\n/g,', ')).slice(0,90)}</div>`:''}</div>${m && m.cook ? avatar(m.cook) : ''}</div>`;
+  }
+  h += `</div>`;
+  if(ingCount) h += `<button class="btn ghost full" onclick="weekToList()">🛒 Add this week's ingredients to ${esc((shopList()||{name:'list'}).name)}</button>`;
+  $('#v-meals').innerHTML = h;
+}
+function shopList(){ return getRec('lists','groceries') || listsSorted()[0]; }
+function pastMeals(){
+  const m = new Map();
+  [...D.meals].sort((a,b)=>(a.ts||0)-(b.ts||0)).forEach(x => { if(x.title) m.set(x.title.toLowerCase(), x); });
+  return [...m.values()];
+}
+function mealForm(d){
+  const m = getRec('meals','meal-'+d) || {title:'', cook:'', ingredients:'', notes:''};
+  openSheet(`<h3>Dinner · ${fmtDay(d, true)}</h3>
+    <label class="f">What's for dinner</label><input id="m-title" list="mealhist" value="${esc(m.title)}" placeholder="e.g. Tacos" oninput="mealFill()" autocomplete="off">
+    <datalist id="mealhist">${pastMeals().map(x=>`<option value="${esc(x.title)}">`).join('')}</datalist>
+    <label class="f">Who's cooking</label><div class="chips" id="m-cook">${memberChips(m.cook?[m.cook]:[], 'who', false)}</div>
+    <label class="f">Ingredients to buy (one per line or commas)</label><textarea id="m-ing" placeholder="mince&#10;taco shells&#10;avocado">${esc(m.ingredients||'')}</textarea>
+    <label class="f">Notes</label><input id="m-notes" value="${esc(m.notes||'')}" placeholder="optional">
+    <div class="btns"><button class="btn" onclick="saveMeal('${d}',false)">Save</button><button class="btn ghost" onclick="saveMeal('${d}',true)">Save + add to ${esc((shopList()||{name:'list'}).name)}</button></div>
+    <div class="btns"><button class="btn ghost sm" onclick="closeSheet()">Cancel</button>${m.title ? `<button class="btn danger sm" onclick="clearMeal('${d}')">Clear this night</button>` : ''}</div>`);
+}
+function mealFill(){
+  const v = $('#m-title').value.trim().toLowerCase(), ing = $('#m-ing');
+  if(ing.value.trim()) return;
+  const p = pastMeals().find(x => x.title.toLowerCase() === v);
+  if(p && p.ingredients) ing.value = p.ingredients;
+}
+function ingredientsToList(text){
+  const L = shopList(); if(!L){ toast('Make a list first'); return 0; }
+  let n = 0; String(text||'').split(/\n|,/).forEach(s => n += addToList(L.id, s));
+  savePrefs(); return n;
+}
+function saveMeal(d, addIng){
+  const title = $('#m-title').value.trim(), ing = $('#m-ing').value.trim();
+  const old = getRec('meals','meal-'+d);
+  if(!title && !ing){ if(old) removeRec('meals', old.id); closeSheet(); commit(); return; }
+  upsert('meals', Object.assign({}, old || {id:'meal-'+d}, {date:d, title, cook: chosen('#m-cook')[0] || '', ingredients: ing, notes: $('#m-notes').value.trim()}));
+  let n = 0; if(addIng) n = ingredientsToList(ing);
+  closeSheet(); commit(); toast(addIng ? `Saved · ${n} added to ${(shopList()||{}).name}` : 'Dinner saved');
+}
+function clearMeal(d){ removeRec('meals','meal-'+d); closeSheet(); commit(); }
+function weekToList(){
+  let n = 0;
+  for(let i=0;i<7;i++){ const m = getRec('meals','meal-'+addDays(mealWeek,i)); if(m && m.ingredients) n += ingredientsToList(m.ingredients); }
+  commit(); toast(n ? `Added ${n} item${n>1?'s':''} to ${(shopList()||{}).name}` : 'Everything’s already on the list');
+}
+
+/* ---------- settings ---------- */
+function openSettings(){
+  const ms = membersSorted();
+  openSheet(`<h3>Settings</h3>
+    <label class="f">App name</label><input id="s-name" value="${esc(D.settings.name||'Family Hub')}" onchange="setAppName(this.value)">
+    <label class="f">Family members</label>
+    <div id="s-members">${ms.map(m => `<div class="row" style="margin:6px 0"><button class="swatch" style="background:${esc(m.color)}" title="Change colour" onclick="cycleColour('${esc(m.id)}')"></button><input class="grow" value="${esc(m.name)}" onchange="renameMember('${esc(m.id)}',this.value)"><button class="x" onclick="deleteMember('${esc(m.id)}')">✕</button></div>`).join('') || '<div class="small muted">No one yet.</div>'}</div>
+    <form class="add" style="margin-top:8px" onsubmit="addMember(event)"><input id="s-newmem" placeholder="Name" autocomplete="off"><button class="btn">Add</button></form>
+    <label class="f">This device belongs to</label><select onchange="P.me=this.value;savePrefs();renderAll()"><option value="">—</option>${ms.map(m => `<option value="${esc(m.id)}" ${P.me===m.id?'selected':''}>${esc(m.name)}</option>`).join('')}</select>
+    <div class="card" style="margin-top:18px"><h2>Calendar extras (this device)</h2>
+      <label class="ck"><input type="checkbox" ${P.showHol!==false?'checked':''} onchange="P.showHol=this.checked;savePrefs();renderAll()"> 🇳🇿 NZ public holidays</label>
+      <label class="ck"><input type="checkbox" ${P.showTerms!==false?'checked':''} onchange="P.showTerms=this.checked;savePrefs();renderAll()"> 🏫 School terms &amp; holidays</label>
+      <label class="ck"><input type="checkbox" ${P.cdSchool!==false?'checked':''} onchange="P.cdSchool=this.checked;savePrefs();renderAll()"> ⏳ Countdown to school holidays</label>
+      <label class="ck"><input type="checkbox" ${P.cdXmas!==false?'checked':''} onchange="P.cdXmas=this.checked;savePrefs();renderAll()"> ⏳ Countdown to Christmas</label>
+      <label class="ck"><input type="checkbox" ${P.offerCal!==false?'checked':''} onchange="P.offerCal=this.checked;savePrefs()"> 📅 Offer to add new events to my phone calendar</label>
+      <div class="small muted">Term dates are the Ministry's (to end of 2028). Term 1 start and Term 4 finish vary by school — add your school's actual dates as events if they differ.</div>
+    </div>
+    <div class="card"><h2>GitHub sync</h2>
+      <div class="small muted" id="syncstat"></div>
+      <label class="f">Owner (your GitHub username)</label><input id="g-owner" value="${esc(SYNC.owner)}" autocapitalize="off" autocomplete="off">
+      <label class="f">Data repository (private)</label><input id="g-repo" value="${esc(SYNC.repo)}" autocapitalize="off">
+      <div class="row"><div class="grow"><label class="f">Branch</label><input id="g-branch" value="${esc(SYNC.branch)}" autocapitalize="off"></div><div class="grow"><label class="f">File</label><input id="g-path" value="${esc(SYNC.path)}" autocapitalize="off"></div></div>
+      <label class="f">Token</label><input id="g-token" type="password" value="${esc(SYNC.token)}" placeholder="github_pat_…" autocomplete="off">
+      <div class="btns"><button class="btn" onclick="saveSync()">Save &amp; sync</button><button class="btn ghost" onclick="syncNow(true)">Sync now</button></div>
+      <div class="btns"><button class="btn ghost sm" onclick="shareSetup()">📲 Share setup link</button>${SYNC.token ? `<button class="btn danger sm" onclick="disconnectSync()">Turn off sync</button>` : ''}</div>
+      <div class="small muted" style="margin-top:8px">The setup link includes the token, so send it straight to family (e.g. a text to your partner) — anyone with it can read and change the family data.</div>
+    </div>
+    <div class="card"><h2>Backup</h2><div class="btns" style="margin-top:0"><button class="btn ghost sm" onclick="exportBackup()">Export backup</button><button class="btn ghost sm" onclick="$('#importfile').click()">Import backup (merges)</button></div></div>
+    <div class="btns"><button class="btn full" onclick="closeSheet()">Done</button></div>
+    <div class="foot">build ${BUILD}</div>`);
+  updateSyncStatus();
+}
+function setAppName(v){ D.settings = {...D.settings, name: v.trim() || 'Family Hub', ts: Date.now()}; commit(); }
+function addMember(ev){
+  ev.preventDefault(); const n = $('#s-newmem').value.trim(); if(!n) return;
+  const used = D.members.map(m => m.color);
+  const color = PALETTE.find(c => !used.includes(c)) || PALETTE[D.members.length % PALETTE.length];
+  upsert('members', {id: uid(), name: n, color, order: D.members.length});
+  if(!P.me && D.members.length === 1){ P.me = D.members[0].id; savePrefs(); }
+  commit(); openSettings(); setTimeout(()=> $('#s-newmem') && $('#s-newmem').focus(), 30);
+}
+function renameMember(id, v){ const m = mem(id); if(!m || !v.trim()) return; upsert('members', {...m, name: v.trim()}); commit(); }
+function cycleColour(id){ const m = mem(id); if(!m) return; const i = PALETTE.indexOf(m.color); upsert('members', {...m, color: PALETTE[(i+1) % PALETTE.length]}); commit(); openSettings(); }
+function deleteMember(id){ const m = mem(id); if(!m || !confirm(`Remove ${m.name}? Their events and jobs stay, just unassigned.`)) return; removeRec('members', id); if(P.me===id){ P.me=''; savePrefs(); } commit(); openSettings(); }
+function exportBackup(){
+  const blob = new Blob([JSON.stringify(canon(D), null, 1)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'familyhub-backup-' + today() + '.json'; document.body.appendChild(a); a.click(); a.remove();
+}
+function importBackup(inp){
+  const f = inp.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = () => { try{ const changed = mergeRemote(JSON.parse(r.result)); persist(); renderAll(); scheduleSync(); toast(changed ? 'Backup merged in' : 'Nothing new in that backup'); }catch(e){ toast('That file isn’t a Family Hub backup'); } inp.value=''; };
+  r.readAsText(f);
+}
+
+/* ---------- sync (GitHub contents API) ---------- */
+function stableStr(x){
+  if(Array.isArray(x)) return '[' + x.map(stableStr).join(',') + ']';
+  if(x && typeof x === 'object') return '{' + Object.keys(x).sort().filter(k => x[k] !== undefined).map(k => JSON.stringify(k) + ':' + stableStr(x[k])).join(',') + '}';
+  return JSON.stringify(x);
+}
+function canon(d){
+  const o = {v:1, settings: d.settings, tomb:{}};
+  Object.keys(d.tomb||{}).sort().forEach(k => o.tomb[k] = d.tomb[k]);
+  for(const c of COLS) o[c] = [...d[c]].sort((a,b)=> a.id<b.id?-1:a.id>b.id?1:0);
+  return o;
+}
+function mergeRemote(raw){
+  if(!raw) return false;
+  const R = normalise(raw);
+  const before = stableStr(canon(D));
+  const tomb = {...D.tomb};
+  for(const id in R.tomb) if(!(tomb[id] >= R.tomb[id])) tomb[id] = R.tomb[id];
+  const cutoff = Date.now() - 120*864e5;
+  for(const id in tomb) if(tomb[id] < cutoff) delete tomb[id];
+  const out = {v:1, tomb, settings: (R.settings.ts||0) > (D.settings.ts||0) ? R.settings : D.settings};
+  for(const c of COLS){
+    const m = new Map(D[c].map(x => [x.id, x]));
+    for(const x of R[c]){ const l = m.get(x.id); if(!l || (x.ts||0) > (l.ts||0)) m.set(x.id, x); }
+    out[c] = [...m.values()].filter(x => !(tomb[x.id] >= (x.ts||0)));
+  }
+  D = out;
+  return stableStr(canon(D)) !== before;
+}
+function syncReady(){ return !!(SYNC.owner && SYNC.repo && SYNC.token); }
+function ghUrl(){ return `https://api.github.com/repos/${encodeURIComponent(SYNC.owner.trim())}/${encodeURIComponent(SYNC.repo.trim())}/contents/${(SYNC.path||'familyhub-data.json').split('/').map(encodeURIComponent).join('/')}`; }
+function ghHeaders(raw){ return {'Authorization':'Bearer ' + SYNC.token.trim(), 'Accept': raw ? 'application/vnd.github.raw+json' : 'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28'}; }
+function ghFail(status){
+  const e = new Error('GitHub ' + status); e.status = status;
+  e.friendly = status===401 ? 'token rejected — check it, or it may have expired'
+    : status===403 ? 'token lacks permission (needs Contents: Read and write)'
+    : status===404 ? 'repo not found — check owner/repo and that the token includes it'
+    : (status===409||status===422) ? 'conflict, try again' : 'GitHub error ' + status;
+  return e;
+}
+function b64enc(s){ const b = new TextEncoder().encode(s); let bin=''; for(let i=0;i<b.length;i+=0x8000) bin += String.fromCharCode.apply(null, b.subarray(i, i+0x8000)); return btoa(bin); }
+function b64dec(s){ const bin = atob(String(s).replace(/\s/g,'')); const b = new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) b[i] = bin.charCodeAt(i); return new TextDecoder().decode(b); }
+async function ghGet(){
+  const ref = '?ref=' + encodeURIComponent(SYNC.branch || 'main');
+  const r = await fetch(ghUrl() + ref, {headers: ghHeaders(false), cache:'no-store'});
+  if(r.status === 404){
+    // file missing (fine on first run) or repo missing (not fine) — check the repo
+    const rr = await fetch(`https://api.github.com/repos/${encodeURIComponent(SYNC.owner.trim())}/${encodeURIComponent(SYNC.repo.trim())}`, {headers: ghHeaders(false), cache:'no-store'});
+    if(!rr.ok) throw ghFail(rr.status);
+    return {data:null, sha:null};
+  }
+  if(!r.ok) throw ghFail(r.status);
+  const j = await r.json();
+  let text = j.content ? b64dec(j.content) : '';
+  if(!text && j.size > 0){
+    const r2 = await fetch(ghUrl() + ref, {headers: ghHeaders(true), cache:'no-store'});
+    if(!r2.ok) throw ghFail(r2.status);
+    text = await r2.text();
+  }
+  let data = null;
+  if(text){ try{ data = JSON.parse(text); }catch(e){ const x = new Error('bad file'); x.friendly = 'the file on GitHub isn’t Family Hub data'; throw x; } }
+  return {data, sha: j.sha};
+}
+async function ghPut(payload, sha){
+  const body = {message: `Family Hub sync · ${(mem(P.me)||{name:'device'}).name} · ${new Date().toISOString().slice(0,16).replace('T',' ')}`, content: b64enc(JSON.stringify(payload, null, 1)), branch: SYNC.branch || 'main'};
+  if(sha) body.sha = sha;
+  const r = await fetch(ghUrl(), {method:'PUT', headers: {...ghHeaders(false), 'Content-Type':'application/json'}, body: JSON.stringify(body), cache:'no-store'});
+  if(!r.ok) throw ghFail(r.status);
+}
+let syncing = false, syncAgain = false, syncTimer = null;
+function scheduleSync(){ if(!syncReady()) return; clearTimeout(syncTimer); syncTimer = setTimeout(()=> syncNow(false), 1500); }
+async function syncNow(manual){
+  if(!syncReady()){ if(manual) openSettings(); return; }
+  if(syncing){ syncAgain = true; return; }
+  syncing = true; updateSyncStatus('Syncing…');
+  try{
+    for(let attempt=0; attempt<4; attempt++){
+      const {data, sha} = await ghGet();
+      if(mergeRemote(data)){ persist(); refreshAfterSync(); }
+      const payload = canon(D);
+      if(data && stableStr(canon(normalise(data))) === stableStr(payload)) break;
+      try{ await ghPut(payload, sha); break; }
+      catch(e){ if((e.status===409 || e.status===422) && attempt<3){ await new Promise(r=>setTimeout(r, 400 + Math.random()*600)); continue; } throw e; }
+    }
+    SYNC.last = new Date().toISOString(); SYNC.err = null;
+    if(manual) toast('Synced');
+  }catch(e){
+    SYNC.err = e.friendly || (e instanceof TypeError ? 'no connection' : (e.message || 'failed'));
+    if(manual) toast('Sync failed — ' + SYNC.err);
+  }finally{
+    syncing = false; writeJSON(K.sync, SYNC); updateSyncStatus();
+    if(syncAgain){ syncAgain = false; setTimeout(()=> syncNow(false), 400); }
+  }
+}
+function refreshAfterSync(){
+  // don't wipe a form someone is typing in
+  if(sheetOpen){ const t = $('#apptitle'); if(t) t.textContent = D.settings.name || 'Family Hub'; return; }
+  const focused = document.activeElement && document.activeElement.id === 'newitem' ? $('#newitem').value : null;
+  renderAll();
+  if(focused !== null && $('#newitem')){ $('#newitem').value = focused; $('#newitem').focus(); }
+}
+function updateSyncStatus(busy){
+  const dot = $('#syncdot');
+  if(dot) dot.className = !syncReady() ? '' : busy ? 'busy' : SYNC.err ? 'err' : 'ok';
+  const el = $('#syncstat'); if(!el) return;
+  el.classList.toggle('warn', !!SYNC.err && !busy);
+  if(!syncReady()){ el.textContent = 'Sync is off — data lives on this device only.'; return; }
+  if(busy){ el.textContent = busy; return; }
+  el.textContent = SYNC.err ? 'Last sync failed: ' + SYNC.err : SYNC.last ? 'Last synced ' + new Date(SYNC.last).toLocaleString('en-NZ', {weekday:'short', hour:'numeric', minute:'2-digit'}) : 'Not synced yet';
+}
+function saveSync(){
+  SYNC.owner = $('#g-owner').value.trim(); SYNC.repo = $('#g-repo').value.trim(); SYNC.branch = $('#g-branch').value.trim() || 'main';
+  SYNC.path = $('#g-path').value.trim() || 'familyhub-data.json'; SYNC.token = $('#g-token').value.trim(); SYNC.err = null;
+  writeJSON(K.sync, SYNC); syncNow(true).then(()=> { if(sheetOpen) openSettings(); });
+}
+function disconnectSync(){ if(!confirm('Turn off sync on this device? Data stays here; nothing on GitHub is deleted.')) return; SYNC.token = ''; SYNC.err = null; SYNC.last = null; writeJSON(K.sync, SYNC); openSettings(); updateSyncStatus(); }
+function setupLink(){ return location.origin + location.pathname + '#setup=' + encodeURIComponent(b64enc(JSON.stringify({o:SYNC.owner, r:SYNC.repo, b:SYNC.branch, p:SYNC.path, t:SYNC.token}))); }
+async function shareSetup(){
+  if(!syncReady()){ toast('Set up sync on this device first'); return; }
+  const url = setupLink();
+  try{ if(navigator.share){ await navigator.share({title: D.settings.name || 'Family Hub', text: 'Open this to connect to our family app:', url}); return; } }catch(e){ if(e && e.name === 'AbortError') return; }
+  try{ await navigator.clipboard.writeText(url); toast('Setup link copied'); }catch(e){ prompt('Copy this link:', url); }
+}
+function readSetupHash(){
+  const m = location.hash.match(/^#setup=(.+)$/); if(!m) return false;
+  try{
+    const c = JSON.parse(b64dec(decodeURIComponent(m[1])));
+    Object.assign(SYNC, {owner:c.o||'', repo:c.r||'familyhub-data', branch:c.b||'main', path:c.p||'familyhub-data.json', token:c.t||'', err:null});
+    writeJSON(K.sync, SYNC);
+    history.replaceState(null, '', location.pathname + location.search);
+    return true;
+  }catch(e){ toast('That setup link is broken'); return false; }
+}
+
+/* ---------- start ---------- */
+function start(){
+  const fromLink = readSetupHash();
+  renderAll();
+  if(syncReady()) syncNow(false).then(()=>{ if(fromLink){ toast('Connected to family data'); if(!P.me && D.members.length) openSettings(); } });
+  document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible'){ renderAll(); syncNow(false); } });
+  window.addEventListener('online', () => syncNow(false));
+  setInterval(() => { if(document.visibilityState === 'visible' && !syncing) syncNow(false); }, 60000);
+}
+start();
+</script>
+</body>
+</html>
