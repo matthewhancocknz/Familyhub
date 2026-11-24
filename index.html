@@ -16,21 +16,21 @@
   --brand:#2a6f6b; --brand-ink:#fff; --soft:#e7f0ef; --warn:#c0392b; --amber:#d68910;
   --holbg:#fdf0d9; --brand-text:var(--brand); --r:14px; --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
 }
-@media (prefers-color-scheme:dark){
-  :root{--bg:#141817;--card:#1e2422;--ink:#e9ecea;--muted:#9aa39f;--line:#2e3633;--brand:#4fa39d;--soft:#22312f;--warn:#e5675a;--holbg:#3a3121;}
+html[data-mode=dark]{color-scheme:dark}
+html[data-mode=dark]{
+  --bg:#141817;--card:#1e2422;--ink:#e9ecea;--muted:#9aa39f;--line:#2e3633;--brand:#4fa39d;--soft:#22312f;--warn:#e5675a;--holbg:#3a3121;
 }
 html[data-theme=dusk]{--brand:#b5532f;--brand-ink:#fff;--bg:#faf4ec;--soft:#f7e4d8;--line:#eadfd2;--holbg:#e6efdd}
 html[data-theme=kowhai]{--brand-text:#8a5f00;--brand:#e0a100;--brand-ink:#2b2106;--bg:#fbf8ef;--soft:#f8ecc4;--line:#ebe4cf;--holbg:#e3eef6}
 html[data-theme=harbour]{--brand:#1f3a5f;--brand-ink:#fff;--bg:#f3f5f8;--soft:#e1e9f3;--line:#dde3ea;--holbg:#fdf0d9}
 html[data-theme=berry]{--brand:#7b2d5b;--brand-ink:#fff;--bg:#faf5f8;--soft:#f2e0ea;--line:#ecdfe6;--holbg:#fdf0d9}
-@media (prefers-color-scheme:dark){
-  html[data-theme]{--bg:#151716;--line:#2f3432}
-  html[data-theme=dusk]{--brand:#d9714b;--soft:#3a2720;--holbg:#24301f}
-  html[data-theme=kowhai]{--brand-text:#e8b23a;--brand:#e8b23a;--soft:#3a3118;--holbg:#1f2c36}
-  html[data-theme=harbour]{--brand:#5b8fd1;--soft:#1e2a3a;--holbg:#3a3121}
-  html[data-theme=berry]{--brand:#c46a9d;--soft:#3a2330;--holbg:#3a3121}
-  html[data-theme=bush]{--bg:#141817;--line:#2e3633}
-}
+
+  html[data-mode=dark][data-theme]{--bg:#151716;--line:#2f3432}
+  html[data-mode=dark][data-theme=dusk]{--brand:#d9714b;--soft:#3a2720;--holbg:#24301f}
+  html[data-mode=dark][data-theme=kowhai]{--brand-text:#e8b23a;--brand:#e8b23a;--soft:#3a3118;--holbg:#1f2c36}
+  html[data-mode=dark][data-theme=harbour]{--brand:#5b8fd1;--soft:#1e2a3a;--holbg:#3a3121}
+  html[data-mode=dark][data-theme=berry]{--brand:#c46a9d;--soft:#3a2330;--holbg:#3a3121}
+  html[data-mode=dark][data-theme=bush]{--bg:#141817;--line:#2e3633}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -172,7 +172,7 @@ window.addEventListener('error', e => showCrash(e.message + (e.lineno ? ' (line 
 window.addEventListener('unhandledrejection', e => showCrash('Promise: ' + ((e.reason && e.reason.message) || e.reason)));
 function showCrash(msg){ const c = document.getElementById('crash'); if(!c) return; c.style.display='block'; c.textContent = 'Something broke: ' + msg + '\nTap to hide. Build ' + BUILD; c.onclick = () => c.style.display='none'; }
 
-const BUILD = '2026-11-24 · v2.1';
+const VERSION = '1'; const BUILD = 'version ' + VERSION + ' · 24 Nov 2026';
 const K = {data:'famhub.data', sync:'famhub.sync', prefs:'famhub.prefs'};
 const COLS = ['members','events','lists','items','tasks','meals'];
 const PALETTE = ['#e4572e','#2e86ab','#7a5195','#2a9d8f','#f4a261','#d1495b','#5c7cfa','#6a994e','#8d6e63','#ef6f9b'];
@@ -227,10 +227,12 @@ function normalise(d){
 }
 let D = normalise(readJSON(K.data, null));
 let SYNC = Object.assign({owner:'', repo:'familyhub-data', branch:'main', path:'familyhub-data.json', token:'', last:null, err:null}, readJSON(K.sync, {}));
-let P = Object.assign({tab:'home', me:'', calFilter:'all', calView:'month', list:'groceries', taskFilter:'all', recent:[], showHol:true, showTerms:true, cdSchool:true, cdXmas:true, offerCal:true, theme:'dusk'}, readJSON(K.prefs, {}));
+let P = Object.assign({tab:'home', me:'', calFilter:'all', calView:'month', list:'groceries', taskFilter:'all', recent:[], showHol:true, showTerms:true, cdSchool:true, cdXmas:true, offerCal:true, theme:'dusk', appearance:'auto'}, readJSON(K.prefs, {}));
 const THEMES = [['dusk','Pirongia dusk','#b5532f'],['kowhai','Kōwhai','#e0a100'],['harbour','Harbour','#1f3a5f'],['berry','Boysenberry','#7b2d5b'],['bush','Bush','#2a6f6b']];
-function applyTheme(){ const t = THEMES.find(x => x[0]===P.theme) || THEMES[0]; document.documentElement.dataset.theme = t[0]; const m = document.querySelector('meta[name=theme-color]'); if(m) m.content = t[2]; }
+const darkMQ = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+function applyTheme(){ const dark = P.appearance === 'dark' || (P.appearance !== 'light' && darkMQ && darkMQ.matches); document.documentElement.dataset.mode = dark ? 'dark' : 'light'; const t = THEMES.find(x => x[0]===P.theme) || THEMES[0]; document.documentElement.dataset.theme = t[0]; const m = document.querySelector('meta[name=theme-color]'); if(m) m.content = t[2]; }
 applyTheme();
+if(darkMQ && darkMQ.addEventListener) darkMQ.addEventListener('change', applyTheme);
 let calMonth = today().slice(0,8) + '01';
 let selDay = today();
 let mealWeek = monday(today());
@@ -424,7 +426,7 @@ function renderHome(){
   h += `<div class="card"><h2>Tonight's dinner</h2><div class="stat" onclick="mealForm('${t}')"><span style="font-size:22px">🍽</span><div class="grow">${meal && meal.title ? esc(meal.title) + (meal.cook && mem(meal.cook) ? ` <span class="small muted">· ${esc(memName(meal.cook))} cooking</span>` : '') : '<span class="muted">Not planned yet — tap to add</span>'}</div></div></div>`;
   const lists = listsSorted();
   h += `<div class="card"><h2>Lists</h2>${lists.map(l => { const n = D.items.filter(i => i.list===l.id && !i.done).length; return `<div class="stat" onclick="P.list='${esc(l.id)}';go('lists')"><span style="font-size:20px">🛒</span><div class="grow">${esc(l.name)}</div><b>${n}</b><span class="muted small">to get</span></div>`; }).join('') || '<div class="empty">No lists yet.</div>'}</div>`;
-  h += `<div class="foot">build ${BUILD}</div>`;
+  h += `<div class="foot">${esc(D.settings.name || 'Family Hub')} · ${BUILD}</div>`;
   $('#v-home').innerHTML = h;
 }
 
@@ -792,6 +794,8 @@ function openSettings(){
   const ms = membersSorted();
   openSheet(`<h3>Settings</h3>
     <label class="f">Colour theme (this device)</label><div class="chips">${THEMES.map(([k,n,c]) => `<button type="button" class="chip ${P.theme===k?'on':''}" onclick="P.theme='${k}';savePrefs();applyTheme();openSettings()"><span class="dot" style="--c:${c}"></span>${n}</button>`).join('')}</div>
+    <label class="f">Appearance (this device)</label><div class="seg">${[['auto','Auto'],['light','Light'],['dark','Dark']].map(([k,n]) => `<button type="button" class="${(P.appearance||'auto')===k?'on':''}" onclick="P.appearance='${k}';savePrefs();applyTheme();openSettings()">${n}</button>`).join('')}</div>
+    <div class="small muted">Auto follows your phone's dark mode.</div>
     <label class="f">App name</label><input id="s-name" value="${esc(D.settings.name||'Family Hub')}" onchange="setAppName(this.value)">
     <label class="f">Family members</label>
     <div id="s-members">${ms.map(m => `<div class="row" style="margin:6px 0"><button class="swatch" style="background:${esc(m.color)}" title="Change colour" onclick="cycleColour('${esc(m.id)}')"></button><input class="grow" value="${esc(m.name)}" onchange="renameMember('${esc(m.id)}',this.value)"><button class="x" onclick="deleteMember('${esc(m.id)}')">✕</button></div>`).join('') || '<div class="small muted">No one yet.</div>'}</div>
@@ -817,7 +821,7 @@ function openSettings(){
     </div>
     <div class="card"><h2>Backup</h2><div class="btns" style="margin-top:0"><button class="btn ghost sm" onclick="exportBackup()">Export backup</button><button class="btn ghost sm" onclick="$('#importfile').click()">Import backup (merges)</button></div></div>
     <div class="btns"><button class="btn full" onclick="closeSheet()">Done</button></div>
-    <div class="foot">build ${BUILD}</div>`);
+    <div class="foot">Family Hub ${BUILD}</div>`);
   updateSyncStatus();
 }
 function setAppName(v){ D.settings = {...D.settings, name: v.trim() || 'Family Hub', ts: Date.now()}; commit(); }
